@@ -22,6 +22,11 @@ export default function Home() {
 
       const data = await res.json();
 
+      if (!data.success) {
+        alert(data.error || "Failed");
+        return;
+      }
+
       setResult(data.data || []);
     } catch (err) {
       console.error(err);
@@ -51,7 +56,7 @@ export default function Home() {
         </button>
       </div>
 
-      {/* INPUT BOX */}
+      {/* INPUT */}
       <div className="flex justify-center mt-10">
         <div className="w-[400px] p-6 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl">
           <input
@@ -81,7 +86,7 @@ export default function Home() {
             >
               <div className="flex justify-between items-center mb-3">
                 <h2 className="font-bold text-lg">
-                  {item.pair.hero} ⚔️ {item.pair.villain}
+                  {item?.pair?.hero} ⚔️ {item?.pair?.villain}
                 </h2>
                 <span className="text-xs bg-black/40 px-2 py-1 rounded">
                   Viral
@@ -90,14 +95,14 @@ export default function Home() {
 
               {/* SCRIPT */}
               <div className="space-y-2 text-sm mb-4">
-                {item.script.dialogue.map((line: any, idx: number) => (
+                {item?.script?.dialogue?.map((line: any, idx: number) => (
                   <p key={idx}>
-                    <b>{line.speaker}:</b> {line.line}
+                    <b>{line?.speaker}:</b> {line?.line}
                   </p>
                 ))}
               </div>
 
-              {/* COPY BUTTON */}
+              {/* COPY */}
               <button
                 onClick={() =>
                   navigator.clipboard.writeText(
@@ -113,8 +118,8 @@ export default function Home() {
 
               {/* EXTRA */}
               <div className="mt-4 text-xs opacity-80 space-y-1">
-                <p>🎬 {item.videoPrompts?.[0]}</p>
-                <p>🧠 {item.imagePrompts?.[0]}</p>
+                <p>🎬 {item?.videoPrompts?.[0]}</p>
+                <p>🧠 {item?.imagePrompts?.[0]}</p>
               </div>
             </div>
           ))}
