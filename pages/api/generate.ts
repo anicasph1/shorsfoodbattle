@@ -23,21 +23,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             content: `
 Create 3 DIFFERENT viral food battles using "${hero}".
 
-STRICT RULES:
-- Each battle must be unique
+RULES:
 - Format: hero → villain → hero
 - Only 3 lines
-- Each line must be LONG, emotional, dramatic
-- Total duration: 16 seconds (8s + 8s pacing)
-- Make it cinematic and addictive
-- Make it feel like a viral TikTok script
+- Each line must be LONG, emotional, dramatic, and punchy
+- Must feel like viral TikTok dialogue
+- Total duration: 16 seconds (8s + 8s)
+- Avoid generic phrases
 
 Also include:
 - imagePrompts (2)
 - videoPrompts (3 cinematic shots)
 - SEO (title, description, hashtags)
 
-OUTPUT FORMAT (JSON ONLY):
+RETURN JSON ONLY:
 
 {
   "results": [
@@ -69,19 +68,34 @@ OUTPUT FORMAT (JSON ONLY):
     });
 
     const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || "";
 
-    const content = data.choices?.[0]?.message?.content;
+    // 🔥 CLEAN RESPONSE
+    const cleaned = content
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
+      .trim();
 
-    const parsed = JSON.parse(content);
+    let parsed;
+
+    try {
+      parsed = JSON.parse(cleaned);
+    } catch (err) {
+      console.error("PARSE ERROR:", cleaned);
+
+      return res.status(500).json({
+        success: false,
+        error: "Invalid AI response",
+      });
+    }
 
     return res.status(200).json({
       success: true,
-      data: parsed.results,
+      data: parsed.results || parsed,
     });
 
   } catch (error) {
     console.error(error);
-
     return res.status(500).json({
       success: false,
       error: "AI generation failed",
