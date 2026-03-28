@@ -1,91 +1,98 @@
-'use client';
-
-import { useState, useEffect } from 'react';
+import { useState } from "react";
 
 export default function Home() {
-  const [food, setFood] = useState('');
-  const [result, setResult] = useState<any[] | null>(null);
+  const [input, setInput] = useState("");
+  const [result, setResult] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [dark, setDark] = useState(true);
 
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', dark);
-  }, [dark]);
-
-  const handleGenerate = async () => {
-    setLoading(true);
-    setResult(null);
-
+  const generate = async () => {
     try {
-      const res = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ food }),
+      setLoading(true);
+
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          food: input,
+        }),
       });
 
       const data = await res.json();
-      setResult(data.data);
-    } catch {
-      alert('Error generating');
+
+      setResult(data.data || []);
+    } catch (err) {
+      console.error(err);
+      alert("Error generating content");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <main className="min-h-screen px-6 py-10 bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 dark:from-black dark:via-gray-900 dark:to-black transition-all">
-
+    <div
+      className={`min-h-screen transition-all duration-500 ${
+        dark
+          ? "bg-gradient-to-br from-black via-gray-900 to-blue-900 text-white"
+          : "bg-gradient-to-br from-gray-100 to-white text-black"
+      }`}
+    >
       {/* HEADER */}
-      <div className="flex justify-between items-center mb-10">
-        <h1 className="text-3xl font-bold text-white">🔥 Tyzn Shorts</h1>
+      <div className="flex justify-between items-center p-6">
+        <h1 className="text-xl font-bold">🔥 Tyzn Shorts</h1>
 
         <button
           onClick={() => setDark(!dark)}
-          className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-xl text-white hover:scale-105 transition"
+          className="px-4 py-2 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 hover:scale-105 transition"
         >
-          {dark ? '☀️ Light' : '🌙 Dark'}
+          {dark ? "🌞 Light" : "🌙 Dark"}
         </button>
       </div>
 
-      {/* INPUT CARD */}
-      <div className="max-w-xl mx-auto backdrop-blur-xl bg-white/10 border border-white/20 p-6 rounded-2xl shadow-xl">
+      {/* INPUT BOX */}
+      <div className="flex justify-center mt-10">
+        <div className="w-[400px] p-6 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl">
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Enter food..."
+            className="w-full p-3 rounded-lg bg-black/30 outline-none mb-4"
+          />
 
-        <input
-          value={food}
-          onChange={(e) => setFood(e.target.value)}
-          placeholder="Enter food..."
-          className="w-full p-3 rounded-lg mb-4 bg-white/20 text-white placeholder-gray-300 outline-none"
-        />
-
-        <button
-          onClick={handleGenerate}
-          disabled={loading}
-          className="w-full p-3 rounded-lg bg-black text-white hover:scale-105 transition"
-        >
-          {loading ? 'Generating...' : 'Generate Food Battle'}
-        </button>
+          <button
+            onClick={generate}
+            disabled={loading}
+            className="w-full p-3 bg-black rounded-lg hover:scale-105 transition font-semibold"
+          >
+            {loading ? "Generating..." : "Generate Food Battle"}
+          </button>
+        </div>
       </div>
 
       {/* RESULTS */}
-      {result && (
-        <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-
-          {result.map((item, idx) => (
+      <div className="grid md:grid-cols-3 gap-6 p-10">
+        {result?.length > 0 &&
+          result.map((item, i) => (
             <div
-              key={idx}
-              className="relative backdrop-blur-xl bg-white/10 border border-white/20 p-5 rounded-2xl shadow-xl hover:scale-105 hover:-translate-y-1 transition-all duration-300"
+              key={i}
+              className="p-6 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl hover:scale-105 transition"
             >
-
-              {/* TITLE */}
-              <h2 className="text-lg font-bold text-white mb-3">
-                {item.pair.hero} ⚔️ {item.pair.villain}
-              </h2>
+              <div className="flex justify-between items-center mb-3">
+                <h2 className="font-bold text-lg">
+                  {item.pair.hero} ⚔️ {item.pair.villain}
+                </h2>
+                <span className="text-xs bg-black/40 px-2 py-1 rounded">
+                  Viral
+                </span>
+              </div>
 
               {/* SCRIPT */}
-              <div className="text-sm text-gray-200 space-y-1 mb-3">
-                {item.script.dialogue.map((d: any, i: number) => (
-                  <p key={i}>
-                    <span className="font-semibold text-white">{d.speaker}:</span> {d.line}
+              <div className="space-y-2 text-sm mb-4">
+                {item.script.dialogue.map((line: any, idx: number) => (
+                  <p key={idx}>
+                    <b>{line.speaker}:</b> {line.line}
                   </p>
                 ))}
               </div>
@@ -94,25 +101,24 @@ export default function Home() {
               <button
                 onClick={() =>
                   navigator.clipboard.writeText(
-                    item.script.dialogue.map((d: any) => `${d.speaker}: ${d.line}`).join('\n')
+                    item.script.dialogue
+                      .map((l: any) => `${l.speaker}: ${l.line}`)
+                      .join("\n")
                   )
                 }
-                className="text-xs bg-white text-black px-3 py-1 rounded hover:scale-105 transition"
+                className="px-3 py-1 text-xs bg-white/20 rounded hover:bg-white/30 transition"
               >
                 Copy Script
               </button>
 
-              {/* BADGE */}
-              <div className="absolute top-2 right-2 text-xs bg-black/50 px-2 py-1 rounded text-white">
-                Viral
+              {/* EXTRA */}
+              <div className="mt-4 text-xs opacity-80 space-y-1">
+                <p>🎬 {item.videoPrompts?.[0]}</p>
+                <p>🧠 {item.imagePrompts?.[0]}</p>
               </div>
-
             </div>
           ))}
-
-        </div>
-      )}
-
-    </main>
+      </div>
+    </div>
   );
 }
